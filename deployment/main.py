@@ -11,8 +11,7 @@ from keras.models import *
 from keras.metrics import *
 from keras.optimizers import *
 from keras.applications import *
-from keras.preprocessing.image import loadImages
-
+from keras.preprocessing.image import load_img
 import matplotlib.pyplot as plt
 import seaborn as sns
 from tqdm import tqdm
@@ -71,7 +70,7 @@ def openImages(paths):
     '''
     images = []
     for path in paths:
-        image = loadImages(path, target_size=(imageSize,imageSize))
+        image = load_img(path, target_size=(imageSize,imageSize))
         image = augmentImages(image)
         images.append(image)
     return np.array(images)
@@ -200,7 +199,7 @@ def DECLB(label): # decode lables
     return uniqueLables[label]
 
 def prd(path):
-    image = loadImages(path, target_size=(imageSize,imageSize))
+    image = load_img(path, target_size=(imageSize,imageSize))
     image = augmentImages(image)
     image = np.expand_dims(image, axis=0)
     prediction = model.predict(image)
