@@ -11,11 +11,10 @@ from keras.models import *
 from keras.metrics import *
 from keras.optimizers import *
 from keras.applications import *
-from keras.preprocessing.image import load_img
+from keras.preprocessing.image import loadImages
 
 import matplotlib.pyplot as plt
 import seaborn as sns
-
 from tqdm import tqdm
 import os
 import random
@@ -25,35 +24,35 @@ import os
 
 
 
-train_dataset = ['deployment/DATA/Training/']
-test_dataset = ['deployment/DATA/Testing/']
+trainDataset = ['deployment/DATA/Training/']
+testDataset = ['deployment/DATA/Testing/']
 
-train_paths = []
-train_labels = []
+trainPaths = []
+trainLables = []
 
-for train_dir in train_dataset:
-    for label in os.listdir(train_dir):
-        for image in os.listdir(train_dir+label):
-            train_paths.append(train_dir+label+'/'+image)
-            train_labels.append(label)
+for trainDir in trainDataset:
+    for label in os.listdir(trainDir):
+        for image in os.listdir(trainDir+label):
+            trainPaths.append(trainDir+label+'/'+image)
+            trainLables.append(label)
 
-train_paths, train_labels = shuffle(train_paths, train_labels)
+trainPaths, trainLables = shuffle(trainPaths, trainLables)
 
-test_paths = []
-test_labels = []
+testPaths = []
+testLables = []
 
-for test_dir in test_dataset:
-    for label in os.listdir(test_dir):
-        for image in os.listdir(test_dir+label):
-            test_paths.append(test_dir+label+'/'+image)
-            test_labels.append(label)
+for testDir in testDataset:
+    for label in os.listdir(testDir):
+        for image in os.listdir(testDir+label):
+            testPaths.append(testDir+label+'/'+image)
+            testLables.append(label)
 
-test_paths, test_labels = shuffle(test_paths, test_labels)
-unique_labels = os.listdir(train_dir)
+testPaths, testLables = shuffle(testPaths, testLables)
+uniqueLables = os.listdir(trainDir)
 
 
 agu = 0.5
-def augment_image(image):
+def augmentImages(image):
     image = Image.fromarray(np.uint8(image))
     image = ImageEnhance.Brightness(image).enhance(random.uniform(1-agu,1+agu))
     image = ImageEnhance.Contrast(image).enhance(random.uniform(1-agu,1+agu))
@@ -62,31 +61,31 @@ def augment_image(image):
     image = np.array(image)/255.0
     return image
     
-IMAGE_SIZE = 128
+imageSize = 128
 
 
         # FOR VISULISIN THE SET
-def open_images(paths):
+def openImages(paths):
     '''
     Given a list of paths to images, this function returns the images as arrays (after augmenting them)
     '''
     images = []
     for path in paths:
-        image = load_img(path, target_size=(IMAGE_SIZE,IMAGE_SIZE))
-        image = augment_image(image)
+        image = loadImages(path, target_size=(imageSize,imageSize))
+        image = augmentImages(image)
         images.append(image)
     return np.array(images)
 
-def encode_label(labels):
+def encodeLables(labels):
     encoded = []
     for x in labels:
-        encoded.append(unique_labels.index(x))
+        encoded.append(uniqueLables.index(x))
     return np.array(encoded)
 
-def decode_label(labels):
+def decodeLables(labels):
     decoded = []
     for x in labels:
-        decoded.append(unique_labels[x])
+        decoded.append(uniqueLables[x])
     return np.array(decoded)
 try:
     model = tf.keras.models.load_model('deployment/model.keras')
@@ -94,8 +93,8 @@ try:
 except Exception as e:
     print(e)
 
-    # images = open_images(train_paths[40:49])
-    # lbl = train_labels[40:49]
+    # images = openImages(trainPaths[40:49])
+    # lbl = trainLables[40:49]
     # fig = plt.figure(figsize=(12, 6))
     # for x in range(1, 9):
     #     fig.add_subplot(2, 4, x)
@@ -106,56 +105,56 @@ except Exception as e:
     # plt.show()
 
 
-    def datagen(paths, labels, batch_size=12, epochs=1):
+    def datagen(paths, labels, batchSize=12, epochs=1):
         for _ in range(epochs):
-            for x in range(0, len(paths), batch_size):
-                batch_paths = paths[x:x+batch_size]
-                batch_images = open_images(batch_paths)
-                batch_labels = labels[x:x+batch_size]
-                batch_labels = encode_label(batch_labels)
-                yield batch_images, batch_labels
+            for x in range(0, len(paths), batchSize):
+                batchPaths = paths[x:x+batchSize]
+                batchImages = openImages(batchPaths)
+                batchLabels = labels[x:x+batchSize]
+                batchLabels = encodeLables(batchLabels)
+                yield batchImages, batchLabels
 
-    base_model = VGG16(input_shape=(IMAGE_SIZE,IMAGE_SIZE,3), include_top=False, weights='imagenet')
-    for layer in base_model.layers:
+    baseModel = VGG16(input_shape=(imageSize,imageSize,3), include_top=False, weights='imagenet')
+    for layer in baseModel.layers:
         layer.trainable = False
     # Set the last vgg block to trainable
-    base_model.layers[-2].trainable = True
-    base_model.layers[-3].trainable = True
-    base_model.layers[-4].trainable = True
+    baseModel.layers[-2].trainable = True
+    baseModel.layers[-3].trainable = True
+    baseModel.layers[-4].trainable = True
 
     model = Sequential()
-    model.add(Input(shape=(IMAGE_SIZE,IMAGE_SIZE,3)))
-    model.add(base_model)
+    model.add(Input(shape=(imageSize,imageSize,3)))
+    model.add(baseModel)
     model.add(Flatten())
     model.add(Dropout(0.3))
     model.add(Dense(128, activation='relu'))
     model.add(Dropout(0.2))
-    model.add(Dense(len(unique_labels), activation='softmax'))
+    model.add(Dense(len(uniqueLables), activation='softmax'))
 
 
     model.compile(optimizer=Adam(learning_rate=0.0001),
              loss='sparse_categorical_crossentropy',
              metrics=['sparse_categorical_accuracy'])
     
-    batch_size = 25
-    steps = int(len(train_paths)/batch_size)
+    batchSize = 25
+    steps = int(len(trainPaths)/batchSize)
     epochs = 1
-    history = model.fit(datagen(train_paths, train_labels, batch_size=batch_size, epochs=epochs),
+    history = model.fit(datagen(trainPaths, trainLables, batchSize=batchSize, epochs=epochs),
                         epochs=epochs, steps_per_epoch=steps)
     model.save("model2.keras")
     print("YOU NEED TO RENAME MODEL2.KERAS TO MODEL.KERAS")
 
-    batch_size = 32
-    steps = int(len(test_paths)/batch_size)
-    y_pred = []
-    y_true = []
-    for x,y in tqdm(datagen(test_paths, test_labels, batch_size=batch_size, epochs=1), total=steps):
+    batchSize = 32
+    steps = int(len(testPaths)/batchSize)
+    yPred = []
+    yTrue = []
+    for x,y in tqdm(datagen(testPaths, testLables, batchSize=batchSize, epochs=1), total=steps):
         pred = model.predict(x)
         pred = np.argmax(pred, axis=-1)
-        for i in decode_label(pred):
-            y_pred.append(i)
-        for i in decode_label(y):
-            y_true.append(i)
+        for i in decodeLables(pred):
+            yPred.append(i)
+        for i in decodeLables(y):
+            yTrue.append(i)
 
 
 ###################################################
@@ -168,26 +167,26 @@ except Exception as e:
 
 # to see the confusion matrix run the code below
             
-# min_samples_per_class = min([test_labels.count(label) for label in unique_labels])
-# balanced_test_paths = []
-# balanced_test_labels = []
+# minSamplesPerClass = min([testLables.count(label) for label in uniqueLables])
+# balancedTestPaths = []
+# balancedTestLables = []
 
-# for label in unique_labels:
-#     class_paths = [path for path, lbl in zip(test_paths, test_labels) if lbl == label]
-#     balanced_test_paths.extend(class_paths[:min_samples_per_class])
-#     balanced_test_labels.extend([label] * min_samples_per_class)
+# for label in uniqueLables:
+#     classPaths = [path for path, lbl in zip(testPaths, testLables) if lbl == label]
+#     balancedTestPaths.extend(classPaths[:minSamplesPerClass])
+#     balancedTestLables.extend([label] * minSamplesPerClass)
 
 
-# test_images_balanced = open_images(balanced_test_paths)
-# test_labels_encoded_balanced = encode_label(balanced_test_labels)
+# testImagesBalanced = openImages(balancedTestPaths)
+# testLables_encoded_balanced = encodeLables(balancedTestLables)
 
-# predictions_balanced = model.predict(test_images_balanced)
+# predictions_balanced = model.predict(testImagesBalanced)
 # predicted_labels_balanced = np.argmax(predictions_balanced, axis=1)
 
-# confusion_matrix_balanced = tf.math.confusion_matrix(test_labels_encoded_balanced, predicted_labels_balanced, num_classes=len(unique_labels))
+# confusionMatrixBalanced = tf.math.confusion_matrix(testLables_encoded_balanced, predicted_labels_balanced, num_classes=len(uniqueLables))
 
 # plt.figure(figsize=(8, 6))
-# sns.heatmap(confusion_matrix_balanced, annot=True, fmt='d', cmap='Blues', xticklabels=unique_labels, yticklabels=unique_labels)
+# sns.heatmap(confusionMatrixBalanced, annot=True, fmt='d', cmap='Blues', xticklabels=uniqueLables, yticklabels=uniqueLables)
 # plt.title('Confusion Matrix (Balanced Testing)')
 # plt.xlabel('Predicted')
 # plt.ylabel('True')
@@ -198,16 +197,16 @@ except Exception as e:
             #prediction
 ###################################
 def DECLB(label): # decode lables
-    return unique_labels[label]
+    return uniqueLables[label]
 
 def prd(path):
-    image = load_img(path, target_size=(IMAGE_SIZE,IMAGE_SIZE))
-    image = augment_image(image)
+    image = loadImages(path, target_size=(imageSize,imageSize))
+    image = augmentImages(image)
     image = np.expand_dims(image, axis=0)
     prediction = model.predict(image)
-    predicted_label = DECLB(np.argmax(prediction))
+    predictedLabel = DECLB(np.argmax(prediction))
     certainty = round(np.max(prediction) * 100)
-    return predicted_label, certainty
+    return predictedLabel, certainty
 
 
 ###################################
