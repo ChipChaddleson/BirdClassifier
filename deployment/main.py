@@ -86,8 +86,11 @@ def decodeLables(labels):
     for x in labels:
         decoded.append(uniqueLables[x])
     return np.array(decoded)
+
+
+
 try:
-    model = tf.keras.models.load_model('deployment/model.keras')
+    model = tf.keras.models.load_model('model.keras')
     print("LOADED MODEL")
 except Exception as e:
     print(e)
@@ -140,7 +143,7 @@ except Exception as e:
     epochs = 1
     history = model.fit(datagen(trainPaths, trainLables, batchSize=batchSize, epochs=epochs),
                         epochs=epochs, steps_per_epoch=steps)
-    model.save("model2.keras")
+    model.save("model.keras")
     print("YOU NEED TO RENAME MODEL2.KERAS TO MODEL.KERAS")
 
     batchSize = 32
