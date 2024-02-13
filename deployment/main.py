@@ -65,9 +65,6 @@ imageSize = 128
 
         # FOR VISULISIN THE SET
 def openImages(paths):
-    '''
-    Given a list of paths to images, this function returns the images as arrays (after augmenting them)
-    '''
     images = []
     for path in paths:
         image = load_img(path, target_size=(imageSize,imageSize))
@@ -146,17 +143,16 @@ except Exception as e:
     model.save("model.keras")
     print("YOU NEED TO RENAME MODEL2.KERAS TO MODEL.KERAS")
 
-    batchSize = 32
-    steps = int(len(testPaths)/batchSize)
-    yPred = []
-    yTrue = []
-    for x,y in tqdm(datagen(testPaths, testLables, batchSize=batchSize, epochs=1), total=steps):
-        pred = model.predict(x)
-        pred = np.argmax(pred, axis=-1)
-        for i in decodeLables(pred):
-            yPred.append(i)
-        for i in decodeLables(y):
-            yTrue.append(i)
+    # steps = int(len(testPaths)/batchSize)
+    # yPred = []
+    # yTrue = []
+    # for x,y in tqdm(datagen(testPaths, testLables, batchSize=batchSize, epochs=1), total=steps):
+    #     pred = model.predict(x)
+    #     pred = np.argmax(pred, axis=-1)
+    #     for i in decodeLables(pred):
+    #         yPred.append(i)
+    #     for i in decodeLables(y):
+    #         yTrue.append(i)
 
 
 ###################################################

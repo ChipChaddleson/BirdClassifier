@@ -7,39 +7,50 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <style>
+        body {
+            background-color: #2E3440; /* Polar Night 1 */
+            color: #ECEFF4; /* Snow Storm 1 */
+        }
+
+        a {
+            color: #81A1C1; /* Frost 1 */
+        }
+
         .container {
             padding: 50px 10%;
         }
 
         .box {
             position: relative;
-            background: #ffffff;
-            width: 100%;
+            background: #2E3440; /* Polar Night 1 */
+            color: #ECEFF4; /* Snow Storm 1 */
         }
 
-        .box-header {
-            color: #444;
+        .boxHeader {
+            color: #D8DEE9; /* Snow Storm 4 */
             display: block;
             padding: 10px;
             position: relative;
-            border-bottom: 1px solid #f4f4f4;
+            border-bottom: 1px solid #3B4252; /* Polar Night 2 */
             margin-bottom: 10px;
         }
 
-        .box-tools {
+        .boxTools {
             position: absolute;
             right: 10px;
             top: 5px;
         }
 
-        .dropzone-wrapper {
-            border: 2px dashed #91b0b3;
-            color: #92b0b3;
+        .dropzoneWrapper {
+            height: 300px;
+            border: 2px dashed #4C566A; /* Polar Night 3 */
+            color: #5E81AC; /* Frost 2 */
+            background:#434C5E;
             position: relative;
-            height: 150px;
         }
 
-        .dropzone-desc {
+        .dropzoneDesc {
+            transform: translate(0px, -25%);
             position: absolute;
             margin: 0 auto;
             left: 0;
@@ -48,6 +59,7 @@
             width: 40%;
             top: 50px;
             font-size: 16px;
+            
         }
 
         .dropzone,
@@ -60,20 +72,21 @@
             opacity: 0;
         }
 
-        .dropzone-wrapper:hover,
-        .dropzone-wrapper.dragover {
-            background: #ecf0f5;
+        .dropzoneWrapper:hover,
+        .dropzoneWrapper.dragover {
+            background: #81A1C1; /* Polar Night 4 */
         }
 
-        .preview-zone {
+        .previewZone {
             text-align: center;
         }
 
-        .preview-zone .box {
+        .previewZone .box {
             box-shadow: none;
             border-radius: 0;
             margin-bottom: 0;
         }
+
     </style>
 </head>
 <body>
@@ -84,22 +97,22 @@
                     <div class="col-md-12">
                         <div class="form-group">
                             <label class="control-label">Upload File</label>
-                            <div class="preview-zone hidden">
+                            <div class="previewZone hidden">
                                 <div class="box box-solid">
-                                    <div class="box-header with-border">
+                                    <div class="boxHeader withBorder">
                                         <div><b>Preview</b></div>
-                                        <div class="box-tools pull-right">
-                                            <button type="button" class="btn btn-danger btn-xs remove-preview">
-                                                <i class="fa fa-times"></i> Reset This Form
+                                        <div class="boxTools pull-right">
+                                            <button type="button" class="btn btn-danger btn-xs removePreview">
+                                                <i class="fa faTimes"></i> Reset This Form
                                             </button>
                                         </div>
                                     </div>
                                     <div class="box-body"></div>
                                 </div>
                             </div>
-                            <div class="dropzone-wrapper">
-                                <div class="dropzone-desc">
-                                    <i class="glyphicon glyphicon-download-alt"></i>
+                            <div class="dropzoneWrapper">
+                                <div class="dropzoneDesc">
+                                    <i class="glyphicon glyphiconDownloadAlt"></i>
                                     <p>Choose an image file or drag it here.</p>
                                 </div>
                                 <input type="file" name="file" class="dropzone">
@@ -128,8 +141,8 @@
                         '<img width="200" src="' + e.target.result + '" />' +
                         '<p>' + input.files[0].name + '</p>';
                     var wrapperZone = $(input).parent();
-                    var previewZone = $(input).parent().parent().find('.preview-zone');
-                    var boxZone = $(input).parent().parent().find('.preview-zone').find('.box').find('.box-body');
+                    var previewZone = $(input).parent().parent().find('.previewZone');
+                    var boxZone = $(input).parent().parent().find('.previewZone').find('.box').find('.box-body');
 
                     wrapperZone.removeClass('dragover');
                     previewZone.removeClass('hidden');
@@ -150,21 +163,21 @@
             readFile(this);
         });
 
-        $('.dropzone-wrapper').on('dragover', function(e) {
+        $('.dropzoneWrapper').on('dragover', function(e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).addClass('dragover');
         });
 
-        $('.dropzone-wrapper').on('dragleave', function(e) {
+        $('.dropzoneWrapper').on('dragleave', function(e) {
             e.preventDefault();
             e.stopPropagation();
             $(this).removeClass('dragover');
         });
 
-        $('.remove-preview').on('click', function() {
-            var boxZone = $(this).parents('.preview-zone').find('.box-body');
-            var previewZone = $(this).parents('.preview-zone');
+        $('.removePreview').on('click', function() {
+            var boxZone = $(this).parents('.previewZone').find('.box-body');
+            var previewZone = $(this).parents('.previewZone');
             var dropzone = $(this).parents('.form-group').find('.dropzone');
             boxZone.empty();
             previewZone.addClass('hidden');
