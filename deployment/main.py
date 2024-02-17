@@ -1,11 +1,8 @@
 import numpy as np
 import tensorflow as tf
 from sklearn.utils import shuffle
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
 from PIL import Image, ImageEnhance
 
-from tensorflow import keras
 from keras.layers import *
 from keras.models import *
 from keras.metrics import *
@@ -14,11 +11,9 @@ from keras.applications import *
 from keras.preprocessing.image import load_img
 import matplotlib.pyplot as plt
 import seaborn as sns
-from tqdm import tqdm
-import os
 import random
-
 from flask import Flask, render_template, request
+import base64
 import os
 
 
@@ -78,12 +73,6 @@ def encodeLables(labels):
         encoded.append(uniqueLables.index(x))
     return np.array(encoded)
 
-def decodeLables(labels):
-    decoded = []
-    for x in labels:
-        decoded.append(uniqueLables[x])
-    return np.array(decoded)
-
 
 
 try:
@@ -91,19 +80,6 @@ try:
     print("LOADED MODEL")
 except Exception as e:
     print(e)
-
-    # images = openImages(trainPaths[40:49])
-    # lbl = trainLables[40:49]
-    # fig = plt.figure(figsize=(12, 6))
-    # for x in range(1, 9):
-    #     fig.add_subplot(2, 4, x)
-    #     plt.axis('off')
-    #     plt.title(lbl[x])
-    #     plt.imshow(images[x])
-    # plt.rcParams.update({'font.size': 12})
-    # plt.show()
-
-
     def datagen(paths, labels, batchSize=12, epochs=1):
         for _ in range(epochs):
             for x in range(0, len(paths), batchSize):
@@ -143,17 +119,6 @@ except Exception as e:
     model.save("model.keras")
     print("YOU NEED TO RENAME MODEL2.KERAS TO MODEL.KERAS")
 
-    # steps = int(len(testPaths)/batchSize)
-    # yPred = []
-    # yTrue = []
-    # for x,y in tqdm(datagen(testPaths, testLables, batchSize=batchSize, epochs=1), total=steps):
-    #     pred = model.predict(x)
-    #     pred = np.argmax(pred, axis=-1)
-    #     for i in decodeLables(pred):
-    #         yPred.append(i)
-    #     for i in decodeLables(y):
-    #         yTrue.append(i)
-
 
 ###################################################
             # AFTER ALL THAT #
@@ -176,12 +141,12 @@ except Exception as e:
 
 
 # testImagesBalanced = openImages(balancedTestPaths)
-# testLables_encoded_balanced = encodeLables(balancedTestLables)
+# testLablesEncodedBalanced = encodeLables(balancedTestLables)
 
-# predictions_balanced = model.predict(testImagesBalanced)
-# predicted_labels_balanced = np.argmax(predictions_balanced, axis=1)
+# predictionsBalanced = model.predict(testImagesBalanced)
+# predictedLabelsBalanced = np.argmax(predictionsBalanced, axis=1)
 
-# confusionMatrixBalanced = tf.math.confusion_matrix(testLables_encoded_balanced, predicted_labels_balanced, num_classes=len(uniqueLables))
+# confusionMatrixBalanced = tf.math.confusion_matrix(testLablesEncodedBalanced, predictedLabelsBalanced, num_classes=len(uniqueLables))
 
 # plt.figure(figsize=(8, 6))
 # sns.heatmap(confusionMatrixBalanced, annot=True, fmt='d', cmap='Blues', xticklabels=uniqueLables, yticklabels=uniqueLables)
@@ -189,6 +154,8 @@ except Exception as e:
 # plt.xlabel('Predicted')
 # plt.ylabel('True')
 # plt.show()
+# accuracy_balanced = np.sum(np.diag(confusionMatrixBalanced)) / np.sum(confusionMatrixBalanced)
+# print(f"Accuracy on Balanced Testing (100 samples): {accuracy_balanced:.2%}")
 
 
 ###################################
@@ -202,7 +169,9 @@ def prd(path):
     image = augmentImages(image)
     image = np.expand_dims(image, axis=0)
     prediction = model.predict(image)
+    print(f"prediction: {prediction}")
     predictedLabel = DECLB(np.argmax(prediction))
+    print(f"predictiedLable: {predictedLabel}")
     certainty = round(np.max(prediction) * 100)
     return predictedLabel, certainty
 
@@ -228,10 +197,21 @@ def uploadFile():
                 os.makedirs(tempDir)
             loco = os.path.join(tempDir, uploadedFile.filename)
             uploadedFile.save(loco)
-            prdLabel, Cert = prd(loco)
-            return f'this is a {prdLabel}, with {Cert}% chance'
+            prdLabel, cert = prd(loco)
+            if cert >= 90:
+                cert = f"high {cert}% certainty"
+            elif cert >= 80:
+                cert = f"{cert}% certainty"
+            elif cert >=65:
+                cert = f"low certainty of {cert}%"
+            else:
+                cert = f"very low certainty, only {cert}%"
+            with open(loco, "rb") as image_file:
+                encodedString = base64.b64encode(image_file.read()).decode('utf-8') # turn file into base63
+            return render_template('results.html', imageData=encodedString, label=prdLabel, certainty=cert)
+
         else:
             return 'No file uploaded'
-
+        
 if __name__ == '__main__':
     app.run(debug=True)
