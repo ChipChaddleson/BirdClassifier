@@ -76,7 +76,7 @@ def encodeLables(labels):
 
 
 try:
-    model = tf.keras.models.load_model('model.keras')
+    model = tf.keras.models.load_model('modelf2.keras')
     print("LOADED MODEL")
 except Exception as e:
     print(e)
